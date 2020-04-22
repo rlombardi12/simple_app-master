@@ -65,10 +65,10 @@
           403
         ]
       },
-      "entity": {},
-      "entityKind": "tm:asm:policies:general:generalstate",
-      "action": "update-append",
-      "description": "Add 403 to Allowed Response Codes."
+#      "entity": {},
+#      "entityKind": "tm:asm:policies:general:generalstate",
+#      "action": "update-append",
+#      "description": "Add 403 to Allowed Response Codes."
     }
   ]
 }
