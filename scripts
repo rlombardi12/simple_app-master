@@ -27,10 +27,10 @@ check_suggestions() {
     if [ -f /tmp/suggest_mod ];
     then
         sleep 10
-        polid=$(curl -X POST --user admin:${DOCKERHUB_PASS} --insecure https://10.1.1.7/mgmt/tm/asm/tasks/export-suggestions -d '{ "policyReference": { "link": "https://localhost/mgmt/tm/asm/policies/orTNBtBqVsAAGRAn-0xl_g" }, "inline": true }' | jq -r '.id')
+        polid=$(curl -X POST --user admin:${DOCKERHUB_PASS} --insecure https://34.71.36.55:8443/mgmt/tm/asm/tasks/export-suggestions -d '{ "policyReference": { "link": "https://localhost/mgmt/tm/asm/policies/orTNBtBqVsAAGRAn-0xl_g" }, "inline": true }' | jq -r '.id')
         echo $polid
         sleep 10
-        suggestion=$(curl -k --user admin:${DOCKERHUB_PASS} https://10.1.1.7/mgmt/tm/asm/tasks/export-suggestions/$polid | jq -r '.result.suggestions')
+        suggestion=$(curl -k --user admin:${DOCKERHUB_PASS} https://34.71.36.55:8443/mgmt/tm/asm/tasks/export-suggestions/$polid | jq -r '.result.suggestions')
         modification=$(echo $suggestion | sed 's/^.//' | sed 's/.$//')
         echo $modification
         echo 10.1.1.6 gitlab.lab >> /etc/hosts
@@ -60,7 +60,7 @@ function upload_file_to_bigip() {
     export size_minus=`expr $size - 1`
     export range="0-${size_minus}/${size}"
     echo $range
-    curl -vv -i -X POST -H "Content-Range: $range" --data-binary "@$1" --user admin:${DOCKERHUB_PASS} --insecure  https://10.1.1.7/mgmt/tm/asm/file-transfer/uploads/policy.json
+    curl -vv -i -X POST -H "Content-Range: $range" --data-binary "@$1" --user admin:${DOCKERHUB_PASS} --insecure  https://34.71.36.55:8443/mgmt/tm/asm/file-transfer/uploads/policy.json
 }
 
 waf_to_staging() {
@@ -91,9 +91,9 @@ waf_to_staging() {
     echo "Upload Policy to BIG-IP"
     upload_file_to_bigip waf_policy.json
     echo "Import Policy to BIG-IP"
-    curl -k -X POST https://10.1.1.7/mgmt/tm/asm/tasks/import-policy/ --user admin:${DOCKERHUB_PASS} -d'{"filename":"policy.json","policy":{"fullPath":"/Common/AppPolicy01"}}'
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/import-policy/ --user admin:${DOCKERHUB_PASS} -d'{"filename":"policy.json","policy":{"fullPath":"/Common/AppPolicy01"}}'
     echo "Apply Policy"
-    curl -k -X POST https://10.1.1.7/mgmt/tm/asm/tasks/apply-policy/ --user admin:${DOCKERHUB_PASS} -d'{"policy":{"fullPath":"/Common/AppPolicy01"}}'
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/apply-policy/ --user admin:${DOCKERHUB_PASS} -d'{"policy":{"fullPath":"/Common/AppPolicy01"}}'
 }
 
 waf_to_prod() {
@@ -124,9 +124,9 @@ waf_to_prod() {
     echo "Upload Policy to BIG-IP"
     upload_file_to_bigip waf_policy.json
     echo "Import Policy to BIG-IP"
-    curl -k -X POST https://10.1.1.7/mgmt/tm/asm/tasks/import-policy/ --user admin:${DOCKERHUB_PASS} -d'{"filename":"policy.json","policy":{"fullPath":"/Common/AppPolicy01"}}'
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/import-policy/ --user admin:${DOCKERHUB_PASS} -d'{"filename":"policy.json","policy":{"fullPath":"/Common/AppPolicy01"}}'
     echo "Apply Policy"
-    curl -k -X POST https://10.1.1.7/mgmt/tm/asm/tasks/apply-policy/ --user admin:${DOCKERHUB_PASS} -d'{"policy":{"fullPath":"/Common/AppPolicy01"}}'
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/apply-policy/ --user admin:${DOCKERHUB_PASS} -d'{"policy":{"fullPath":"/Common/AppPolicy01"}}'
     echo "Attach Policy to PROD Virtual Server"
     sed -i "s/staging/production/g" ConfigMapWaf.yaml
     sed -i "s/10.1.10.101/10.1.10.102/g" ConfigMapWaf.yaml
@@ -138,7 +138,7 @@ waf_to_prod() {
 trusted_traffic() {
     vs_name=serviceMain
     echo VS Name $vs_name
-    vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://10.1.1.7/mgmt/tm/ltm/virtual/~staging~juiceshop~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
+    vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://34.71.36.55:8443/mgmt/tm/ltm/virtual/~staging~juiceshop~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
     echo VS IP $vs_ip
     sleep 5
     curl -o /tmp/resp.json -k "http://$vs_ip/ftp/Packages.json"
@@ -149,7 +149,7 @@ trusted_traffic() {
 vulnerability_scan() {
     vs_name=serviceMain
     echo VS Name $vs_name
-    vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://10.1.1.7/mgmt/tm/ltm/virtual/~staging~juiceshop~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
+    vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://34.71.36.55:8443/mgmt/tm/ltm/virtual/~staging~juiceshop~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
     echo VS IP $vs_ip
     sleep 5
     curl -o /tmp/resp.xss -k "http://$vs_ip/api/Products/1" -H "Content-Type:application/json" --data-binary '{"description":"<script>alert(\"XSS3\")</script>"}'
@@ -201,7 +201,7 @@ cleanup_staging() {
 function dast() {
   vs_name=serviceMain
   echo VS Name $vs_name
-  vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://10.1.1.7/mgmt/tm/ltm/virtual/~production~juiceshopprod~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
+  vs_ip=`curl -k -u admin:$DOCKERHUB_PASS https://34.71.36.55:8443/mgmt/tm/ltm/virtual/~production~juiceshopprod~$vs_name |jq .destination |cut -d'%' -f 1 |cut -d'/' -f 3 |cut -d':' -f 1`
   echo VS IP $vs_ip
   export DAST_WEBSITE=http://$vs_ip/
   /analyze -t $DAST_WEBSITE
