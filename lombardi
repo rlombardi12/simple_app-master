@@ -1,0 +1,10 @@
+#!/bin/bash
+
+function upload_file_to_bigip() {
+    curl -vv -i -X POST -H "Content-Range: 0-3342/3343" --data-binary "@waf_policy.json" --user admin:f5DEMOs4u --insecure  https://34.71.36.55:8443/mgmt/tm/asm/file-transfer/uploads/policy.json
+}
+    echo "Upload Policy to BIG-IP"
+    echo "Import Policy to BIG-IP"
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/import-policy/ --user admin:f5DEMOs4u -d'{"filename":"policy.json","policy":{"fullPath":"/Common/AppPolicy01"}}'
+    echo "Apply Policy"
+    curl -k -X POST https://34.71.36.55:8443/mgmt/tm/asm/tasks/apply-policy/ --user admin:f5DEMOs4u -d'{"policy":{"fullPath":"/Common/AppPolicy01"}}'
